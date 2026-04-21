@@ -2,7 +2,7 @@ using auth_service.Modules.Auth.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace auth_service.Data;
+namespace auth_service.Configurations.Auth;
 
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {

@@ -1,3 +1,4 @@
+using auth_service.Configurations.Auth;
 using auth_service.Modules.Auth.Models;
 using Microsoft.EntityFrameworkCore;
 

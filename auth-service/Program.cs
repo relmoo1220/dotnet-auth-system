@@ -1,3 +1,4 @@
+using auth_service.Configurations.Auth;
 using auth_service.Data;
 using auth_service.Modules.Auth.Models;
 using auth_service.Modules.Auth.Services;
@@ -12,10 +13,18 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresDb"))
 );
+
+builder
+    .Services.AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection("Jwt"))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Key), "JWT Key is required")
+    .Validate(o => o.ExpiryMinutes > 0, "Expiry must be > 0")
+    .ValidateOnStart();
 
 var app = builder.Build();
 
