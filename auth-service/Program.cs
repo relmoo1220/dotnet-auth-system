@@ -1,9 +1,13 @@
+using System.Security.Claims;
+using System.Text;
 using auth_service.Data;
 using auth_service.Modules.Auth.Models;
 using auth_service.Modules.Auth.Services;
 using auth_service.Options;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +31,29 @@ builder
     .Validate(o => o.ExpiryMinutes > 0, "Expiry must be > 0")
     .ValidateOnStart();
 
+var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>();
+
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = jwt!.Issuer,
+            ValidAudience = jwt.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+
+            RoleClaimType = ClaimTypes.Role,
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -42,6 +69,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
