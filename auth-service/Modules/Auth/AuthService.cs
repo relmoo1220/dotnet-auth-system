@@ -8,7 +8,9 @@ namespace auth_service.Modules.Auth.Services;
 public interface IAuthService
 {
     Task RegisterAsync(User user, string plainTextPassword);
-    Task<string?> LoginAsync(string username, string plainTextPassword);
+    Task<object?> LoginAsync(string username, string plainTextPassword);
+    Task LogoutAsync(string refreshToken);
+    Task LogoutAllAsync(int userId);
 }
 
 public class AuthService : IAuthService
@@ -16,16 +18,19 @@ public class AuthService : IAuthService
     private readonly AppDbContext _context;
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly IJwtService _jwtService;
+    private readonly IRefreshTokenService _refreshTokenService;
 
     public AuthService(
         AppDbContext context,
         IPasswordHasher<User> passwordHasher,
-        IJwtService jwtService
+        IJwtService jwtService,
+        IRefreshTokenService refreshTokenService
     )
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
+        _refreshTokenService = refreshTokenService;
     }
 
     public async Task RegisterAsync(User user, string plainTextPassword)
@@ -42,7 +47,7 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<string?> LoginAsync(string username, string plainTextPassword)
+    public async Task<object?> LoginAsync(string username, string plainTextPassword)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
@@ -54,6 +59,30 @@ public class AuthService : IAuthService
         if (result != PasswordVerificationResult.Success)
             return null;
 
-        return _jwtService.GenerateToken(user);
+        var accessToken = _jwtService.GenerateToken(user);
+        var refreshToken = await _refreshTokenService.GenerateRefreshTokenAsync(user);
+        return new { AcesssToken = accessToken, RefreshToken = refreshToken };
+    }
+
+    public async Task LogoutAsync(string refreshToken)
+    {
+        var stored = await _context.RefreshTokens.FirstOrDefaultAsync(r => r.Token == refreshToken);
+
+        if (stored == null)
+            return;
+
+        stored.IsRevoked = true;
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task LogoutAllAsync(int userId)
+    {
+        var tokens = await _context.RefreshTokens.Where(r => r.UserId == userId).ToListAsync();
+
+        foreach (var t in tokens)
+            t.IsRevoked = true;
+
+        await _context.SaveChangesAsync();
     }
 }

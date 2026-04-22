@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using auth_service.Modules.Auth.DTOs;
 using auth_service.Modules.Auth.Models;
 using auth_service.Modules.Auth.Services;
@@ -10,10 +11,12 @@ namespace auth_service.Modules.Auth.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IRefreshTokenService _refreshTokenService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IRefreshTokenService refreshTokenService)
     {
         _authService = authService;
+        _refreshTokenService = refreshTokenService;
     }
 
     [HttpPost("register")]
@@ -29,13 +32,36 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var token = await _authService.LoginAsync(request.Username, request.Password);
+        var result = await _authService.LoginAsync(request.Username, request.Password);
 
-        if (token == null)
-        {
+        if (result == null)
             return Unauthorized(new { message = "Invalid credentials" });
-        }
 
-        return Ok(new { token });
+        return Ok(result);
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+    {
+        await _authService.LogoutAsync(request.RefreshToken);
+
+        return Ok(new { message = "Logged out successfully" });
+    }
+
+    [HttpPost("logout-all")]
+    public async Task<IActionResult> LogoutAll()
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        await _authService.LogoutAllAsync(userId);
+
+        return Ok(new { message = "Logged out from all sessions" });
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] string refreshToken)
+    {
+        var result = await _refreshTokenService.RefreshAsync(refreshToken);
+        return Ok(result);
     }
 }

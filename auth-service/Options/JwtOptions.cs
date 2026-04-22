@@ -1,4 +1,4 @@
-namespace auth_service.Configurations.Auth;
+namespace auth_service.Options;
 
 public class JwtOptions
 {

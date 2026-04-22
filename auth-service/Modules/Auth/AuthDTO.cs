@@ -21,3 +21,8 @@ public class LoginRequest
     [Required]
     public required string Password { get; set; }
 }
+
+public class LogoutRequest
+{
+    public required string RefreshToken { get; set; }
+}
