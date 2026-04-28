@@ -34,5 +34,14 @@ end
 -- Update state
 redis.call("HMSET", key, "tokens", tokens, "last_refill", last_refill)
 
+-- ------------------------------------------------------------
+-- TTL (Time-To-Live)
+-- This ensures inactive users are automatically cleaned up.
+-- If a user stops making requests, their rate limit state
+-- will be removed after 60 seconds to prevent memory buildup.
+-- Every request refreshes this TTL.
+-- ------------------------------------------------------------
+redis.call("EXPIRE", key, 60)
+
 -- Return result: allowed (1 or 0) and remaining tokens
 return { allowed, tokens }

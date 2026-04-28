@@ -75,7 +75,7 @@ public class AuthService : IAuthService
         var stored = await _context.RefreshTokens.FirstOrDefaultAsync(r => r.Token == refreshToken);
 
         if (stored == null)
-            return;
+            throw new Exception("Refresh token not found in DB");
 
         stored.IsRevoked = true;
 

@@ -10,9 +10,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using StackExchange.Redis;
 
+Log.Logger = new LoggerConfiguration().Enrich.FromLogContext().WriteTo.Console().CreateLogger();
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -94,20 +99,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<RateLimiterMiddleware>();
 app.MapControllers();
-
-var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-
-lifetime.ApplicationStarted.Register(() =>
-{
-    foreach (var url in app.Urls)
-    {
-        Console.WriteLine($"Running on: {url}");
-    }
-});
 
 app.Run();

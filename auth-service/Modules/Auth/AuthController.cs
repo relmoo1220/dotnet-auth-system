@@ -45,9 +45,9 @@ public class AuthController : ControllerBase
             new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = false,
                 SameSite = SameSiteMode.Strict,
-                Path = "/auth/refresh",
+                Path = "/",
                 Expires = DateTime.UtcNow.AddDays(7),
             }
         );
@@ -60,10 +60,13 @@ public class AuthController : ControllerBase
     {
         var refreshToken = Request.Cookies["refreshToken"];
 
-        if (!string.IsNullOrEmpty(refreshToken))
+        if (string.IsNullOrEmpty(refreshToken))
         {
-            await _authService.LogoutAsync(refreshToken);
+            Response.Cookies.Delete("refreshToken");
+            return Unauthorized(new { message = "Refresh token missing" });
         }
+
+        await _authService.LogoutAsync(refreshToken);
 
         Response.Cookies.Delete("refreshToken");
 
@@ -73,7 +76,15 @@ public class AuthController : ControllerBase
     [HttpPost("logout-all")]
     public async Task<IActionResult> LogoutAll()
     {
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            Response.Cookies.Delete("refreshToken");
+            return Unauthorized(new { message = "User not authenticated" });
+        }
+
+        var userId = int.Parse(userIdClaim);
 
         await _authService.LogoutAllAsync(userId);
 
