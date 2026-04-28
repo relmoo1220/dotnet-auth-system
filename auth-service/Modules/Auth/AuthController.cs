@@ -34,16 +34,38 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.LoginAsync(request.Username, request.Password);
 
-        if (result == null)
+        if (result is null)
             return Unauthorized(new { message = "Invalid credentials" });
 
-        return Ok(result);
+        var (accessToken, refreshToken) = result.Value;
+
+        Response.Cookies.Append(
+            "refreshToken",
+            refreshToken,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Path = "/auth/refresh",
+                Expires = DateTime.UtcNow.AddDays(7),
+            }
+        );
+
+        return Ok(new { accessToken });
     }
 
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+    public async Task<IActionResult> Logout()
     {
-        await _authService.LogoutAsync(request.RefreshToken);
+        var refreshToken = Request.Cookies["refreshToken"];
+
+        if (!string.IsNullOrEmpty(refreshToken))
+        {
+            await _authService.LogoutAsync(refreshToken);
+        }
+
+        Response.Cookies.Delete("refreshToken");
 
         return Ok(new { message = "Logged out successfully" });
     }
@@ -55,13 +77,34 @@ public class AuthController : ControllerBase
 
         await _authService.LogoutAllAsync(userId);
 
+        Response.Cookies.Delete("refreshToken");
+
         return Ok(new { message = "Logged out from all sessions" });
     }
 
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh([FromBody] string refreshToken)
+    public async Task<IActionResult> Refresh()
     {
+        var refreshToken = Request.Cookies["refreshToken"];
+
+        if (string.IsNullOrEmpty(refreshToken))
+            return Unauthorized();
+
         var result = await _refreshTokenService.RefreshAsync(refreshToken);
-        return Ok(result);
+
+        Response.Cookies.Append(
+            "refreshToken",
+            result.refreshToken,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Path = "/auth/refresh",
+                Expires = DateTime.UtcNow.AddDays(7),
+            }
+        );
+
+        return Ok(new { accessToken = result.accessToken });
     }
 }

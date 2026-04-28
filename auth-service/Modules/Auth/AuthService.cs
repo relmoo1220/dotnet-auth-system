@@ -8,7 +8,10 @@ namespace auth_service.Modules.Auth.Services;
 public interface IAuthService
 {
     Task RegisterAsync(User user, string plainTextPassword);
-    Task<object?> LoginAsync(string username, string plainTextPassword);
+    Task<(string accessToken, string refreshToken)?> LoginAsync(
+        string username,
+        string plainTextPassword
+    );
     Task LogoutAsync(string refreshToken);
     Task LogoutAllAsync(int userId);
 }
@@ -47,7 +50,10 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<object?> LoginAsync(string username, string plainTextPassword)
+    public async Task<(string accessToken, string refreshToken)?> LoginAsync(
+        string username,
+        string plainTextPassword
+    )
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
@@ -61,7 +67,7 @@ public class AuthService : IAuthService
 
         var accessToken = _jwtService.GenerateToken(user);
         var refreshToken = await _refreshTokenService.GenerateRefreshTokenAsync(user);
-        return new { AcesssToken = accessToken, RefreshToken = refreshToken };
+        return (accessToken, refreshToken);
     }
 
     public async Task LogoutAsync(string refreshToken)
