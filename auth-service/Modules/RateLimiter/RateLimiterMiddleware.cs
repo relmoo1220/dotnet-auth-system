@@ -14,7 +14,7 @@ public class RateLimiterMiddleware
     public async Task InvokeAsync(HttpContext context, RateLimiterService limiter)
     {
         var userId =
-            context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            context.User.FindFirst("sub")?.Value
             ?? context.Connection.RemoteIpAddress?.ToString()
             ?? "anonymous";
 

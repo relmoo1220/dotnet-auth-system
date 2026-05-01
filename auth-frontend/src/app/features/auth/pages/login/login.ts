@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { IftaLabelModule } from 'primeng/iftalabel';
+import { AuthService } from '../../auth.service';
 
 @Component({
   selector: 'app-login',
@@ -13,16 +15,37 @@ import { IftaLabelModule } from 'primeng/iftalabel';
   standalone: true,
 })
 export class Login {
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+  ) {}
+
   loginForm = new FormGroup({
-    usernameValue: new FormControl('', [Validators.required]),
-    passwordValue: new FormControl('', [Validators.required]),
+    usernameValue: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    passwordValue: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
   });
 
   login() {
-    if (this.loginForm.invalid) {
-      return;
-    }
+    if (this.loginForm.invalid) return;
 
-    console.log(this.loginForm.value);
+    const { usernameValue, passwordValue } = this.loginForm.getRawValue();
+
+    this.auth.login(usernameValue, passwordValue).subscribe({
+      next: () => {
+        const role = this.auth.getUserRole();
+        console.log(role);
+        if (role === 'admin') this.router.navigate(['/dashboard/admin']);
+        else this.router.navigate(['/dashboard/user']);
+      },
+      error: () => {
+        alert('Login failed');
+      },
+    });
   }
 }

@@ -76,15 +76,13 @@ public class AuthController : ControllerBase
     [HttpPost("logout-all")]
     public async Task<IActionResult> LogoutAll()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var sub = User.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim))
+        if (!int.TryParse(sub, out var userId))
         {
             Response.Cookies.Delete("refreshToken");
             return Unauthorized(new { message = "User not authenticated" });
         }
-
-        var userId = int.Parse(userIdClaim);
 
         await _authService.LogoutAllAsync(userId);
 

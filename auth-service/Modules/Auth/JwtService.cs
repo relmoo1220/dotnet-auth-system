@@ -26,9 +26,9 @@ public class JwtService : IJwtService
     {
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role),
+            new Claim("sub", user.Id.ToString()),
+            new Claim("username", user.Username),
+            new Claim("role", user.Role),
         };
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
