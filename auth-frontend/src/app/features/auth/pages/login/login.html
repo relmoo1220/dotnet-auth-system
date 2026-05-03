@@ -30,5 +30,9 @@
     </p-iftalabel>
 
     <p-button fluid label="Login" (onClick)="login()" [disabled]="loginForm.invalid" />
+    <div class="flex justify-center mt-2">
+      <span class="text-sm text-gray-500"> Don't have an account? </span>
+      <a routerLink="/auth/register" class="ml-2 hover:underline text-sm"> Register </a>
+    </div>
   </div>
 </div>

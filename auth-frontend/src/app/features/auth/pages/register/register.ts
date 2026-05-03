@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import {
   ReactiveFormsModule,
   FormControl,
@@ -12,11 +13,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { IftaLabelModule } from 'primeng/iftalabel';
 import { MessageModule } from 'primeng/message';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [
+    RouterModule,
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
@@ -28,6 +32,10 @@ import { MessageModule } from 'primeng/message';
   styleUrl: './register.css',
 })
 export class Register {
+  constructor(private http: HttpClient) {}
+
+  private apiUrl = environment.apiUrl;
+
   passwordValidator(control: AbstractControl): ValidationErrors | null {
     const value = control.value;
     if (!value) return null;
@@ -58,6 +66,19 @@ export class Register {
   register() {
     if (this.registerForm.invalid) return;
 
-    console.log(this.registerForm.value);
+    const payload = {
+      username: this.registerForm.value.usernameValue,
+      password: this.registerForm.value.passwordValue,
+    };
+
+    this.http.post(`${this.apiUrl}/auth/register`, payload).subscribe({
+      next: (res) => {
+        console.log(payload);
+        console.log('Registered:', res);
+      },
+      error: (err) => {
+        console.error('Register failed:', err);
+      },
+    });
   }
 }

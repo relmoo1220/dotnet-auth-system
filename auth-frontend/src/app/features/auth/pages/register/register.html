@@ -62,5 +62,10 @@
     }
 
     <p-button fluid label="Sign Up" (onClick)="register()" [disabled]="registerForm.invalid" />
+
+    <div class="flex justify-center mt-2">
+      <span class="text-sm text-gray-500"> Already have an account? </span>
+      <a routerLink="/auth/login" class="ml-2 hover:underline text-sm"> Login </a>
+    </div>
   </div>
 </div>

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -9,7 +9,14 @@ import { AuthService } from '../../auth.service';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, ButtonModule, InputTextModule, PasswordModule, IftaLabelModule],
+  imports: [
+    RouterModule,
+    ReactiveFormsModule,
+    ButtonModule,
+    InputTextModule,
+    PasswordModule,
+    IftaLabelModule,
+  ],
   templateUrl: './login.html',
   styleUrl: './login.css',
   standalone: true,
@@ -39,7 +46,6 @@ export class Login {
     this.auth.login(usernameValue, passwordValue).subscribe({
       next: () => {
         const role = this.auth.getUserRole();
-        console.log(role);
         if (role === 'admin') this.router.navigate(['/dashboard/admin']);
         else this.router.navigate(['/dashboard/user']);
       },
