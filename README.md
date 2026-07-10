@@ -59,6 +59,7 @@ Serilog provides context-enriched, structured logging output instead of unstruct
 ## Technology Stack
 
 ### Backend (ASP.NET Core 10)
+
 - **Secure JWT Authentication**: Cookies-only JWT storage prevents XSS vulnerabilities and cross-origin token theft compared to localStorage. Tokens are transmitted securely with HttpOnly, Secure, and SameSite flags.
 - **Refresh Token System**: Long-lived refresh tokens enable seamless user sessions with automatic access token rotation, improving both security and user experience.
 - **Password Security**: Industry-standard bcrypt password hashing via ASP.NET Core Identity ensures strong protection against brute-force attacks and rainbow table exploits.
@@ -69,6 +70,7 @@ Serilog provides context-enriched, structured logging output instead of unstruct
 - **API Documentation**: OpenAPI (Swagger) support enables API exploration and integration testing.
 
 ### Frontend (Angular 21)
+
 - **Reactive Forms**: Declarative form validation and state management with RxJS observables.
 - **Route Protection**: Auth guards and guest guards enforce authorization at the routing level before component instantiation.
 - **HTTP Interceptors**: Automatic JWT cookie inclusion in requests and token refresh handling without manual header management.
@@ -81,6 +83,7 @@ Serilog provides context-enriched, structured logging output instead of unstruct
 ## Technology Stack
 
 ### Backend
+
 - **Runtime**: .NET 10.0
 - **Framework**: ASP.NET Core Web API
 - **Authentication**: JWT Bearer, System.IdentityModel.Tokens.Jwt
@@ -91,6 +94,7 @@ Serilog provides context-enriched, structured logging output instead of unstruct
 - **Rate Limiting**: Custom implementation with Lua scripting
 
 ### Frontend
+
 - **Framework**: Angular 21.2.0
 - **Language**: TypeScript 5.9.2
 - **Package Manager**: npm 10.8.2
@@ -100,10 +104,12 @@ Serilog provides context-enriched, structured logging output instead of unstruct
 - **Testing**: Vitest
 - **Code Quality**: Prettier
 
-### Infrastructure
-- **Containerization**: Docker & Docker Compose
-- **Database**: PostgreSQL 16 Alpine
-- **Cache**: Redis 7 Alpine
+### Infrastructure (Supporting Containers)
+
+- **Container Orchestration**: Docker Compose
+- **Database**: PostgreSQL 16 Alpine (containerized)
+- **Cache**: Redis 7 Alpine (containerized)
+- **Monitoring**: RedisInsight (containerized)
 
 ## Project Structure
 
@@ -174,6 +180,7 @@ dotnet-auth-system/
 ## Rate Limiting
 
 The system implements token bucket rate limiting using Redis and Lua scripting:
+
 - Configurable per-endpoint limits
 - Redis-backed distributed rate limiting
 - Middleware integration for transparent enforcement
@@ -182,6 +189,7 @@ The system implements token bucket rate limiting using Redis and Lua scripting:
 ## Health Checks
 
 Monitor system health via `/healthz` endpoint:
+
 ```json
 {
   "status": "Healthy",
@@ -204,23 +212,35 @@ Monitor system health via `/healthz` endpoint:
 ## Getting Started
 
 ### Prerequisites
-- Docker & Docker Compose
-- .NET 10 SDK (for local development without Docker)
-- Node.js 20+ (for frontend development)
-- npm 10.8.2+
 
-### Quick Start with Docker
+- .NET 10 SDK
+- Node.js 20+
+- npm 10.8.2+
+- Docker & Docker Compose (for PostgreSQL, Redis, and RedisInsight containers)
+
+### Quick Start
 
 ```bash
 # Clone the repository
 git clone https://github.com/relmoo1220/dotnet-auth-system.git
 cd dotnet-auth-system
 
-# Start all services (PostgreSQL, Redis, RedisInsight, Backend, Frontend)
+# Start supporting containers (PostgreSQL, Redis, RedisInsight)
 docker-compose up -d
 
-# Wait for services to be healthy
-# Backend: http://localhost:5000 (or configured port)
+# Backend runs locally
+cd auth-service
+dotnet restore
+dotnet ef database update
+dotnet run
+
+# Frontend runs locally (in another terminal)
+cd auth-frontend
+npm install
+npm start
+
+# Services will be available at:
+# Backend: http://localhost:5000
 # Frontend: http://localhost:4200
 # RedisInsight: http://localhost:5540
 ```
@@ -228,6 +248,7 @@ docker-compose up -d
 ### Local Development Setup
 
 #### Backend Setup
+
 ```bash
 cd auth-service
 
@@ -242,7 +263,9 @@ dotnet run
 ```
 
 ### Backend (auth-service)
+
 Create `appsettings.Development.json`:
+
 ```json
 {
   "Database": {
@@ -261,37 +284,44 @@ Create `appsettings.Development.json`:
 ```
 
 ### Frontend (auth-frontend)
+
 Create `src/environments/environment.ts`:
+
 ```typescript
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5000'
+  apiUrl: "http://localhost:5000",
 };
 ```
 
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `POST /api/auth/refresh` - Refresh access token
 - `POST /api/auth/logout` - User logout
 
 ### Protected Routes
+
 - `GET /api/books` - Get all books (requires authentication)
 
 ### System
+
 - `GET /healthz` - Health check endpoint
 
 ## Testing
 
 ### Backend
+
 ```bash
 cd auth-service
 dotnet test
 ```
 
 ### Frontend
+
 ```bash
 cd auth-frontend
 npm test
@@ -300,6 +330,7 @@ npm test
 ## Database Schema
 
 ### Users Table
+
 - `Id` (Guid, PK)
 - `Username` (string, unique)
 - `Email` (string, unique)
@@ -308,6 +339,7 @@ npm test
 - `CreatedAt` (DateTime)
 
 ### RefreshTokens Table
+
 - `Id` (Guid, PK)
 - `UserId` (Guid, FK)
 - `Token` (string, unique)
@@ -330,6 +362,7 @@ npm test
 ## Skills Demonstrated
 
 ### Backend Development
+
 - Enterprise-level ASP.NET Core architecture
 - JWT authentication and authorization
 - Entity Framework Core with migrations
@@ -341,6 +374,7 @@ npm test
 - Structured logging with Serilog
 
 ### Frontend Development
+
 - Modern Angular architecture with standalone components
 - Reactive programming with RxJS
 - Route guards and interceptors
@@ -351,6 +385,7 @@ npm test
 - Component composition and reusability
 
 ### DevOps & Infrastructure
+
 - Docker containerization
 - Docker Compose orchestration
 - Multi-service coordination
@@ -360,6 +395,7 @@ npm test
 - Version control best practices
 
 ### Software Engineering Practices
+
 - Clean code architecture
 - Separation of concerns (SOLID principles)
 - DRY (Don't Repeat Yourself)
@@ -382,22 +418,3 @@ npm test
 
 This is a portfolio project showcasing full-stack authentication capabilities.
 
-## License
-
-This project is open source and available under the MIT License.
-
-## Author
-
-**Zhencai**
-- GitHub: [@relmoo1220](https://github.com/relmoo1220)
-
----
-
-## Support
-
-For questions or issues, please open an issue on GitHub or contact the author.
-
----
-
-**Last Updated**: July 2026
-**Status**: Production-Ready
